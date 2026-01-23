@@ -1,0 +1,58 @@
+# Configuration for kaggle_s6_e1 Competition
+# Student Exam Score Prediction using Linear Regression
+
+# Data Configuration
+data:
+  train_path: "train.csv"
+  test_path: "test.csv"
+  sample_submission_path: "sample_submission.csv"
+  
+  # Column definitions
+  target_column: "exam_score"
+  id_column: "id"
+  
+  # Features will be auto-detected (all columns except target and id)
+  feature_columns: null
+  
+  validate_schema: true
+
+# Preprocessing Configuration
+preprocessing:
+  # Will auto-detect numerical and categorical features
+  numerical_features: null
+  categorical_features: null
+  
+  # Scale numerical features (required for Linear Regression)
+  scale_numerical: true
+  
+  # Imputation strategy for missing values
+  impute_strategy: "median"
+
+# Model Configuration
+model:
+  type: "lr"  # Options: 'lr', 'ridge', 'lasso', 'gbdt', 'lightgbm', 'xgboost'
+  params: {}  # Linear Regression has no hyperparameters
+  
+  # For Ridge/Lasso, you could use:
+  # type: "ridge"
+  # params:
+  #   alpha: 1.0
+
+# Training Configuration
+training:
+  cv_folds: 5
+  random_state: 42
+
+# Evaluation Configuration
+evaluation:
+  metrics: ['rmse', 'mae', 'r2']
+
+# Output Configuration
+output:
+  artifacts_dir: "artifacts"
+  submission_file: "submission.csv"
+  
+# Logging Configuration
+logging:
+  level: "INFO"
+  log_file: "training.log"
