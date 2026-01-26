@@ -59,22 +59,18 @@ def main():
     pipeline = MLPipeline(config)
     pipeline.load_artifacts(str(artifacts_dir))
     
-    # Load test data
+    # Load and preprocess test data
+    print("Loading and preprocessing test data...")
+    pipeline.load_data(train_path=None, test_path=str(test_path))
+    pipeline.X_test = pipeline.preprocessor.transform(pipeline.X_test)
+    
+    # Get test IDs for submission
     test_df = pd.read_csv(test_path)
-    print(f"\nLoaded test data: {len(test_df)} rows")
-    
-    # Get features (exclude id column)
     id_column = config['data']['id_column']
-    feature_cols = [col for col in test_df.columns if col != id_column]
-    X_test = test_df[feature_cols]
-    
-    # Preprocess test data
-    print("Preprocessing test data...")
-    X_test_processed = pipeline.preprocessor.transform(X_test)
     
     # Generate predictions
     print("Generating predictions...")
-    predictions = pipeline.predict(X_test_processed)
+    predictions = pipeline.predict()
     
     # Create submission file
     submission = pd.DataFrame({

@@ -18,7 +18,10 @@ data:
 
 # Preprocessing Configuration
 preprocessing:
-  # Will auto-detect numerical and categorical features
+  # Will auto-detect numerical and categorical features if null
+  # Example explicit specification:
+  # numerical_features: ['age', 'study_hours', 'sleep_hours']
+  # categorical_features: ['gender', 'course', 'internet_access']
   numerical_features: null
   categorical_features: null
   
