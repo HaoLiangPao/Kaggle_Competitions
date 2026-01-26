@@ -130,6 +130,15 @@ def main():
     preprocessor.save(str(output_path / 'preprocessor.pkl'))
     cv_results.to_csv(output_path / 'cv_results.csv', index=False)
     
+    # Save CV summary for experiment runner
+    cv_summary = {
+        'mean_metrics': cv_results.drop('fold', axis=1).mean().to_dict(),
+        'std_metrics': cv_results.drop('fold', axis=1).std().to_dict()
+    }
+    import json
+    with open(output_path / 'cv_summary.json', 'w') as f:
+        json.dump(cv_summary, f, indent=2)
+    
     print(f"Artifacts saved to: {artifacts_dir}")
     print("--------------------------------------------------")
 

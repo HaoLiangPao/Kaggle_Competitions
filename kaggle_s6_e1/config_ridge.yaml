@@ -1,0 +1,70 @@
+# Configuration for Ridge Regression
+
+# Data Configuration
+data:
+  train_path: "train.csv"
+  test_path: "test.csv"
+  sample_submission_path: "sample_submission.csv"
+  
+  target_column: "exam_score"
+  id_column: "id"
+  
+  feature_columns:
+    - "age"
+    - "study_hours"
+    - "class_attendance"
+    - "sleep_hours"
+    - "gender"
+    - "course"
+    - "internet_access"
+    - "sleep_quality"
+    - "study_method"
+    - "facility_rating"
+    - "exam_difficulty"
+  
+  validate_schema: true
+
+# Preprocessing Configuration
+preprocessing:
+  numerical_features:
+    - "age"
+    - "study_hours"
+    - "class_attendance"
+    - "sleep_hours"
+    
+  categorical_features:
+    - "gender"
+    - "course"
+    - "internet_access"
+    - "sleep_quality"
+    - "study_method"
+    - "facility_rating"
+    - "exam_difficulty"
+  
+  scale_numerical: true
+  impute_strategy: "median"
+
+# Model Configuration
+model:
+  type: "ridge"
+  params:
+    alpha: 1.0
+
+# Training Configuration
+training:
+  cv_folds: 5
+  random_state: 42
+
+# Evaluation Configuration
+evaluation:
+  metrics: ['rmse', 'mae', 'r2']
+
+# Output Configuration
+output:
+  artifacts_dir: "artifacts_ridge"
+  submission_file: "submission_ridge.csv"
+  
+# Logging Configuration
+logging:
+  level: "INFO"
+  log_file: "training_ridge.log"
