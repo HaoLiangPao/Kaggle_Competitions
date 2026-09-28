@@ -208,3 +208,5 @@ __marimo__/
 
 # Kaggle
 api_token
+# Local Kaggle watcher state
+.local/
