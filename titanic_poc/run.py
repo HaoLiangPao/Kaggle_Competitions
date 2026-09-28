@@ -20,7 +20,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 
 
 FEATURES = ["Pclass", "Sex", "Age", "Fare"]
@@ -49,48 +49,66 @@ def read_competition_data(zip_path: Path) -> tuple[pd.DataFrame, pd.DataFrame, p
     return train, test, sample
 
 
-def make_model():
-    preprocessing = ColumnTransformer(
-        [
-            ("numeric", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), ["Pclass", "Age", "Fare"]),
-            ("sex", make_pipeline(SimpleImputer(strategy="most_frequent"), OneHotEncoder(handle_unknown="ignore")), ["Sex"]),
-        ]
-    )
+def cabin_to_deck(frame: pd.DataFrame) -> pd.DataFrame:
+    """Extract a broad deck category; retain missing cabins as Unknown."""
+    deck = frame.iloc[:, 0].fillna("").astype(str).str.strip().str[:1].replace("", "Unknown")
+    return deck.to_frame(name="Deck")
+
+
+def make_model(include_cabin: bool = False):
+    transformers = [
+        ("numeric", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), ["Pclass", "Age", "Fare"]),
+        ("sex", make_pipeline(SimpleImputer(strategy="most_frequent"), OneHotEncoder(handle_unknown="ignore")), ["Sex"]),
+    ]
+    if include_cabin:
+        transformers.append((
+            "cabin_deck",
+            make_pipeline(FunctionTransformer(cabin_to_deck, validate=False), OneHotEncoder(handle_unknown="ignore")),
+            ["Cabin"],
+        ))
+    preprocessing = ColumnTransformer(transformers)
     return make_pipeline(preprocessing, LogisticRegression(max_iter=1000, random_state=SEED))
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a local Titanic baseline and produce a submission-shaped CSV")
     parser.add_argument("--zip", type=Path, default=Path(".local/titanic/titanic.zip"))
-    parser.add_argument("--output", type=Path, default=Path(".local/titanic/submission_poc.csv"))
-    parser.add_argument("--results", type=Path, default=Path(".local/titanic/poc_results.json"))
+    parser.add_argument("--include-cabin", action="store_true", help="Add Cabin deck and an Unknown category")
+    parser.add_argument("--output", type=Path, help="Prediction CSV path; defaults depend on experiment")
+    parser.add_argument("--results", type=Path, help="Results JSON path; defaults depend on experiment")
     args = parser.parse_args()
 
     train, test, sample = read_competition_data(args.zip)
-    x, y = train[FEATURES], train[TARGET]
+    features = FEATURES + (["Cabin"] if args.include_cabin else [])
+    if args.include_cabin and ("Cabin" not in train or "Cabin" not in test):
+        raise ValueError("Cabin is required for the cabin experiment")
+    x, y = train[features], train[TARGET]
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
     scores = {}
-    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), ("logistic_regression", make_model())):
+    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), ("logistic_regression", make_model(args.include_cabin))):
         values = cross_val_score(model, x, y, scoring="accuracy", cv=cv)
         scores[name] = {"folds": [round(float(v), 6) for v in values], "mean": round(float(values.mean()), 6), "std": round(float(values.std()), 6)}
 
-    model = make_model().fit(x, y)
-    predictions = model.predict(test[FEATURES])
+    model = make_model(args.include_cabin).fit(x, y)
+    predictions = model.predict(test[features])
     submission = pd.DataFrame({"PassengerId": test["PassengerId"], TARGET: predictions.astype(int)})
     if submission.columns.tolist() != sample.columns.tolist() or len(submission) != len(sample):
         raise ValueError("Generated submission does not match the sample submission shape")
     if not set(submission[TARGET].unique()) <= {0, 1}:
         raise ValueError("Predictions must be 0 or 1")
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.results.parent.mkdir(parents=True, exist_ok=True)
-    submission.to_csv(args.output, index=False)
+    output = args.output or Path(".local/titanic/submission_cabin.csv" if args.include_cabin else ".local/titanic/submission_poc.csv")
+    results_path = args.results or Path(".local/titanic/cabin_results.json" if args.include_cabin else ".local/titanic/poc_results.json")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    results_path.parent.mkdir(parents=True, exist_ok=True)
+    submission.to_csv(output, index=False)
     results = {
         "competition": "titanic",
         "data_sha256": hashlib.sha256(args.zip.read_bytes()).hexdigest(),
         "train_rows": len(train),
         "test_rows": len(test),
-        "features": FEATURES,
+        "features": features,
+        "cabin_encoding": "first character; missing=Unknown" if args.include_cabin else None,
         "target": TARGET,
         "metric": "accuracy",
         "validation": {"method": "StratifiedKFold", "folds": 5, "shuffle": True, "random_state": SEED},
@@ -98,7 +116,7 @@ def main() -> None:
         "submission_rows": len(submission),
         "versions": {"pandas": pd.__version__, "scikit_learn": sklearn.__version__},
     }
-    args.results.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n")
+    results_path.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps(results, ensure_ascii=False, indent=2))
 
 

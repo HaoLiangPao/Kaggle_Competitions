@@ -9,9 +9,12 @@
 | 方法 | 使用的资料 | 5 折平均准确率 |
 | --- | --- | ---: |
 | 永远猜训练折的多数类 | 无 | 61.6% |
-| 逻辑回归 | 舱位、性别、年龄、票价 | 78.6% |
+| 逻辑回归（已提交） | 舱位、性别、年龄、票价 | 78.6% |
+| 逻辑回归 + Cabin 甲板（本地实验） | 上述四项 + 舱房首字母／Unknown | 79.7% |
 
-每折都重新学习缺失值填充和数值缩放，再训练模型，避免把验证折的信息带入训练。5 折分层、打乱，随机种子为 42。具体每折得分、环境版本和数据 SHA256 见本地 `.local/titanic/poc_results.json`。逻辑回归各折准确率范围约 76.4%–79.9%；这是本地验证结果，不是 Kaggle 榜单分数。
+每折都重新学习缺失值填充和数值缩放，再训练模型，避免把验证折的信息带入训练。5 折分层、打乱，随机种子为 42。原模型的各折得分、环境版本和数据 SHA256 见本地 `.local/titanic/poc_results.json`。`SibSp` 和 `Parch` 在训练、测试数据中均存在且没有缺失值，只是这两版模型暂未使用。
+
+Cabin 训练集缺失 687/891、测试集缺失 327/418，因此新实验不直接记忆舱房号，而是在每折预处理内部提取首字母作为甲板，缺失的单独编码为 `Unknown`。新实验的 5 折均分为 0.796843（原模型 0.785619），但单折分数从 0.752809 到 0.837079，波动较大。用另外四组随机划分复核时，四组平均分提升、一组基本持平。结果仅代表本地验证，没有提交 Kaggle；详见 `.local/titanic/cabin_results.json`。
 
 ## 复现
 
@@ -20,10 +23,11 @@
 ```bash
 mkdir -p .local/titanic
 KAGGLE_API_TOKEN="$(cat api_token)" kaggle competitions download titanic -p .local/titanic
-python titanic_poc/run.py
+python titanic_poc/run.py                  # 复现已提交的四字段模型
+python titanic_poc/run.py --include-cabin  # 独立运行 Cabin 甲板实验
 ```
 
-脚本直接读取压缩包，用全部训练数据拟合后，生成 `.local/titanic/submission_poc.csv`。它会核对提交列名、行数、乘客 ID 顺序和预测值范围。脚本本身不会加入比赛或上传文件。
+脚本直接读取压缩包，用全部训练数据拟合后，分别生成 `.local/titanic/submission_poc.csv` 与 `.local/titanic/submission_cabin.csv`。两者都会核对提交列名、行数、乘客 ID 顺序和预测值范围。脚本本身不会加入比赛或上传文件；Cabin 版本尚未提交。
 
 ## 首次 Kaggle 提交（2026-09-28）
 
@@ -33,4 +37,4 @@ python titanic_poc/run.py
 
 本机 Kaggle token 能列文件、下载数据并提交。Titanic [规则页](https://www.kaggle.com/c/titanic/rules) 当前注明无需接受规则；第一次提交后，账号的“已参加比赛”列表出现 Titanic。本次提交已由用户明确授权。旧版 Kaggle CLI 1.8.3 中 `competitions submissions` 命令出现 `page_number` 参数兼容错误。项目现固定使用已实测的 2.2.4，可直接运行 `kaggle competitions submissions titanic --format json` 读取提交记录。
 
-下一轮可以先加入 `SibSp`、`Parch` 和 `Embarked`，与当前模型用相同的 5 折划分比较。先看验证结果，再决定是否提交。
+下一轮先比较 Cabin 的“是否有舱房记录”与“甲板首字母”哪个真正有用，再逐项加入 `SibSp`、`Parch` 和 `Embarked`。继续使用相同的交叉验证划分，先看稳定性，再决定是否提交。
