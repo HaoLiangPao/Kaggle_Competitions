@@ -62,7 +62,7 @@ def add_family_size(frame: pd.DataFrame) -> pd.DataFrame:
     return frame
 
 
-def make_model(include_cabin: bool = False, include_family: bool = False, include_family_size: bool = False):
+def make_model(include_cabin: bool = False, include_family: bool = False, include_family_size: bool = False, estimator=None):
     numeric_features = ["Pclass", "Age", "Fare"]
     if include_family:
         numeric_features += ["SibSp", "Parch"]
@@ -82,7 +82,9 @@ def make_model(include_cabin: bool = False, include_family: bool = False, includ
     steps = []
     if include_family_size:
         steps.append(FunctionTransformer(add_family_size, validate=False))
-    return make_pipeline(*steps, preprocessing, LogisticRegression(max_iter=1000, random_state=SEED))
+    if estimator is None:
+        estimator = LogisticRegression(max_iter=1000, random_state=SEED)
+    return make_pipeline(*steps, preprocessing, estimator)
 
 
 def main() -> None:
