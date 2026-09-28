@@ -13,6 +13,7 @@
 | 逻辑回归 + Cabin 甲板（本地实验） | 上述四项 + 舱房首字母／Unknown | 79.7% |
 | 逻辑回归 + 家庭人数（本地实验） | 四字段 + `SibSp`、`Parch` | 79.0% |
 | 逻辑回归 + Cabin + 家庭人数（本地实验） | 四字段 + Cabin 甲板 + `SibSp`、`Parch` | 79.8% |
+| 逻辑回归 + Cabin + FamilySize（已提交） | 四字段 + Cabin 甲板 + `SibSp + Parch + 1` | 79.7% |
 
 每折都重新学习缺失值填充和数值缩放，再训练模型，避免把验证折的信息带入训练。5 折分层、打乱，随机种子为 42。原模型的各折得分、环境版本和数据 SHA256 见本地 `.local/titanic/poc_results.json`。`SibSp` 和 `Parch` 在训练、测试数据中均存在且没有缺失值；原四字段模型与 Cabin 实验未使用它们。
 
@@ -33,16 +34,23 @@ python titanic_poc/run.py                  # 复现已提交的四字段模型
 python titanic_poc/run.py --include-cabin  # 独立运行 Cabin 甲板实验
 python titanic_poc/run.py --include-family  # 独立运行家庭人数实验
 python titanic_poc/run.py --include-cabin --include-family  # 两组特征一起使用
+python titanic_poc/run.py --include-cabin --include-family-size  # 本轮提交的家庭规模版本
 ```
 
-脚本直接读取压缩包，用全部训练数据拟合后，为四种配置分别生成 `.local/titanic/submission_<配置>.csv`（原版为 `submission_poc.csv`）。每份文件都会核对提交列名、行数、乘客 ID 顺序和预测值范围。脚本本身不会加入比赛或上传文件；后三版尚未提交。
+脚本直接读取压缩包，用全部训练数据拟合后，为不同配置分别生成 `.local/titanic/submission_<配置>.csv`（原版为 `submission_poc.csv`）。每份文件都会核对提交列名、行数、乘客 ID 顺序和预测值范围。脚本本身不会加入比赛或上传文件；本轮 FamilySize 版本由 Kaggle CLI 单独提交。
 
 ## 首次 Kaggle 提交（2026-09-28）
 
 将本 POC 生成的 CSV 提交至 Titanic；Kaggle 返回成功。随后查询到提交编号 `56628386`、状态 `COMPLETE`、公开榜准确率 **0.75837**。2026-09-28T12:59:17 的 Kaggle 公榜快照显示 **第 9028 名 / 10267 队**，排名会随榜单变化。本地 5 折平均准确率为 0.785619；两者评估的数据不同。提交文件及下载数据继续只保存在被 Git 忽略的 `.local/titanic/`。
 
+## FamilySize + Cabin 提交（2026-09-28）
+
+将 `SibSp`、`Parch` 合成一个数值特征 `FamilySize = SibSp + Parch + 1`，加上 `Pclass`、`Sex`、`Age`、`Fare` 和 Cabin 甲板。仍用逻辑回归，缺失值填充、数值缩放和 Cabin 编码都在每折交叉验证的模型流程内。5 折准确率为 **0.796843**，与只加 Cabin 的实验均分相同；两者对 418 位测试乘客有 15 个不同预测。提交文件为 `.local/titanic/submission_cabin_family_size.csv`，结果元数据为 `.local/titanic/cabin_family_size_results.json`。
+
+Kaggle 提交编号 `56652901`，状态 `COMPLETE`，公开分数 **0.76076**，较四字段模型的 0.75837 增加 0.00239。2026-09-28T21:43:26 的公开榜快照中，`HaoLiangDATA` 为 **第 8866 名 / 10248 队**。榜单采用滚动机制，名次会变；公开分数与本地交叉验证使用不同数据，不能把这次小幅上升直接归因为 FamilySize 必然有效。
+
 ## 下一步与权限
 
 本机 Kaggle token 能列文件、下载数据并提交。Titanic [规则页](https://www.kaggle.com/c/titanic/rules) 当前注明无需接受规则；第一次提交后，账号的“已参加比赛”列表出现 Titanic。本次提交已由用户明确授权。旧版 Kaggle CLI 1.8.3 中 `competitions submissions` 命令出现 `page_number` 参数兼容错误。项目现固定使用已实测的 2.2.4，可直接运行 `kaggle competitions submissions titanic --format json` 读取提交记录。
 
-下一轮可把 `SibSp + Parch + 1` 变成家庭规模、比较“独自旅行”与同行旅客，并把姓名中的称谓或姓氏作为备选特征。新特征都应放在交叉验证流程内，并使用相同划分比较；不要直接记忆测试集乘客的已知答案。先看稳定性，再决定是否提交。
+下一轮可比较家庭规模的非线性关系（例如独自旅行与多人同行），并把姓名中的称谓或姓氏作为备选特征。新特征都应放在交叉验证流程内，并使用相同划分比较；不要直接记忆测试集乘客的已知答案。
