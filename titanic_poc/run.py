@@ -55,9 +55,10 @@ def cabin_to_deck(frame: pd.DataFrame) -> pd.DataFrame:
     return deck.to_frame(name="Deck")
 
 
-def make_model(include_cabin: bool = False):
+def make_model(include_cabin: bool = False, include_family: bool = False):
+    numeric_features = ["Pclass", "Age", "Fare"] + (["SibSp", "Parch"] if include_family else [])
     transformers = [
-        ("numeric", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), ["Pclass", "Age", "Fare"]),
+        ("numeric", make_pipeline(SimpleImputer(strategy="median"), StandardScaler()), numeric_features),
         ("sex", make_pipeline(SimpleImputer(strategy="most_frequent"), OneHotEncoder(handle_unknown="ignore")), ["Sex"]),
     ]
     if include_cabin:
@@ -74,22 +75,24 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run a local Titanic baseline and produce a submission-shaped CSV")
     parser.add_argument("--zip", type=Path, default=Path(".local/titanic/titanic.zip"))
     parser.add_argument("--include-cabin", action="store_true", help="Add Cabin deck and an Unknown category")
+    parser.add_argument("--include-family", action="store_true", help="Add SibSp and Parch as numeric features")
     parser.add_argument("--output", type=Path, help="Prediction CSV path; defaults depend on experiment")
     parser.add_argument("--results", type=Path, help="Results JSON path; defaults depend on experiment")
     args = parser.parse_args()
 
     train, test, sample = read_competition_data(args.zip)
-    features = FEATURES + (["Cabin"] if args.include_cabin else [])
-    if args.include_cabin and ("Cabin" not in train or "Cabin" not in test):
-        raise ValueError("Cabin is required for the cabin experiment")
+    features = FEATURES + (["Cabin"] if args.include_cabin else []) + (["SibSp", "Parch"] if args.include_family else [])
+    for name in features:
+        if name not in train or name not in test:
+            raise ValueError(f"{name} is required for this experiment")
     x, y = train[features], train[TARGET]
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
     scores = {}
-    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), ("logistic_regression", make_model(args.include_cabin))):
+    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), ("logistic_regression", make_model(args.include_cabin, args.include_family))):
         values = cross_val_score(model, x, y, scoring="accuracy", cv=cv)
         scores[name] = {"folds": [round(float(v), 6) for v in values], "mean": round(float(values.mean()), 6), "std": round(float(values.std()), 6)}
 
-    model = make_model(args.include_cabin).fit(x, y)
+    model = make_model(args.include_cabin, args.include_family).fit(x, y)
     predictions = model.predict(test[features])
     submission = pd.DataFrame({"PassengerId": test["PassengerId"], TARGET: predictions.astype(int)})
     if submission.columns.tolist() != sample.columns.tolist() or len(submission) != len(sample):
@@ -97,8 +100,9 @@ def main() -> None:
     if not set(submission[TARGET].unique()) <= {0, 1}:
         raise ValueError("Predictions must be 0 or 1")
 
-    output = args.output or Path(".local/titanic/submission_cabin.csv" if args.include_cabin else ".local/titanic/submission_poc.csv")
-    results_path = args.results or Path(".local/titanic/cabin_results.json" if args.include_cabin else ".local/titanic/poc_results.json")
+    variant = "_".join(name for name, included in (("cabin", args.include_cabin), ("family", args.include_family)) if included) or "poc"
+    output = args.output or Path(f".local/titanic/submission_{variant}.csv")
+    results_path = args.results or Path(f".local/titanic/{variant}_results.json")
     output.parent.mkdir(parents=True, exist_ok=True)
     results_path.parent.mkdir(parents=True, exist_ok=True)
     submission.to_csv(output, index=False)
@@ -109,6 +113,7 @@ def main() -> None:
         "test_rows": len(test),
         "features": features,
         "cabin_encoding": "first character; missing=Unknown" if args.include_cabin else None,
+        "family_encoding": "SibSp and Parch as scaled numbers" if args.include_family else None,
         "target": TARGET,
         "metric": "accuracy",
         "validation": {"method": "StratifiedKFold", "folds": 5, "shuffle": True, "random_state": SEED},
