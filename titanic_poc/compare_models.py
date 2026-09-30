@@ -11,10 +11,9 @@ import sklearn
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 
-from titanic_poc.run import FEATURES, SEED, TARGET, make_model, read_competition_data
+from titanic_poc.run import FEATURES, FOREST_PARAMS, TARGET, make_model, read_competition_data
 
 
-FOREST_PARAMS = {"n_estimators": 300, "max_depth": 5, "min_samples_leaf": 5, "random_state": SEED, "n_jobs": -1}
 SEEDS = [42, 43, 44, 45, 46]
 CASES = [
     ("logistic_basic", "logistic_regression", False, False, False),
@@ -63,7 +62,7 @@ def main() -> None:
         "validation": "Five stratified folds, shuffled, for each listed seed; preprocessing fitted within each fold",
         "seeds": SEEDS,
         "forest_params": FOREST_PARAMS,
-        "note": "Exploratory local comparison; models were selected on these same validation splits. No Kaggle submission or independent test score.",
+        "note": "Exploratory local comparison; models were selected on these same validation splits. This script does not submit or report Kaggle scores; see EXPERIMENTS.md for separate submission records.",
         "sklearn_version": sklearn.__version__,
         "comparisons": comparisons,
     }

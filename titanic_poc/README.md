@@ -16,6 +16,8 @@
 | 逻辑回归 + 家庭人数（本地实验） | 四字段 + `SibSp`、`Parch` | 79.0% |
 | 逻辑回归 + Cabin + 家庭人数（本地实验） | 四字段 + Cabin 甲板 + `SibSp`、`Parch` | 79.8% |
 | 逻辑回归 + Cabin + FamilySize（已提交） | 四字段 + Cabin 甲板 + `SibSp + Parch + 1` | 79.7% |
+| 随机森林（已提交 T07） | 四字段 | 82.5% |
+| 随机森林 + FamilySize（已提交 T08） | 四字段 + `SibSp + Parch + 1` | 82.7% |
 
 每折都重新学习缺失值填充和数值缩放，再训练模型，避免把验证折的信息带入训练。5 折分层、打乱，随机种子为 42。原模型的各折得分、环境版本和数据 SHA256 见本地 `.local/titanic/poc_results.json`。`SibSp` 和 `Parch` 在训练、测试数据中均存在且没有缺失值；原四字段模型与 Cabin 实验未使用它们。
 
@@ -36,10 +38,12 @@ python titanic_poc/run.py                  # 复现已提交的四字段模型
 python titanic_poc/run.py --include-cabin  # 独立运行 Cabin 甲板实验
 python titanic_poc/run.py --include-family  # 独立运行家庭人数实验
 python titanic_poc/run.py --include-cabin --include-family  # 两组特征一起使用
-python titanic_poc/run.py --include-cabin --include-family-size  # 本轮提交的家庭规模版本
+python titanic_poc/run.py --include-cabin --include-family-size  # 已提交的逻辑回归版本
+python titanic_poc/run.py --model random_forest  # T07
+python titanic_poc/run.py --model random_forest --include-family-size  # T08
 ```
 
-脚本直接读取压缩包，用全部训练数据拟合后，为不同配置分别生成 `.local/titanic/submission_<配置>.csv`（原版为 `submission_poc.csv`）。每份文件都会核对提交列名、行数、乘客 ID 顺序和预测值范围。脚本本身不会加入比赛或上传文件；本轮 FamilySize 版本由 Kaggle CLI 单独提交。
+脚本直接读取压缩包，用全部训练数据拟合后，为不同配置分别生成 `.local/titanic/submission_<配置>.csv`（原版为 `submission_poc.csv`）。每份文件都会核对提交列名、行数、乘客 ID 顺序和预测值范围。脚本本身不会加入比赛或上传文件；已提交的版本都由 Kaggle CLI 单独上传。
 
 ## 首次 Kaggle 提交（2026-09-28）
 
@@ -63,12 +67,20 @@ Kaggle 提交编号 `56652901`，状态 `COMPLETE`，公开分数 **0.76076**，
 | 随机森林 | Cabin 甲板、FamilySize | 81.62% |
 | 随机森林 | Cabin 甲板、`SibSp`、`Parch`（分别输入） | 81.64% |
 
-运行 `.local/venv/bin/python -m titanic_poc.compare_models` 可重现，逐折分数、参数和数据哈希保存在 Git 忽略的 `.local/titanic/model_comparison.json`。Cabin 在训练集缺失 687/891 行，本轮随机森林去掉它后均分较高；这只说明在这些本地划分和固定参数下的表现。多次试验复用了相同数据，选出最高项会有选择偏差；这些随机森林模型**尚未提交 Kaggle**，82.15% 不是公开榜分数。
+运行 `.local/venv/bin/python -m titanic_poc.compare_models` 可重现，逐折分数、参数和数据哈希保存在 Git 忽略的 `.local/titanic/model_comparison.json`。Cabin 在训练集缺失 687/891 行，本轮随机森林去掉它后均分较高；这只说明在这些本地划分和固定参数下的表现。多次试验复用了相同数据，选出最高项会有选择偏差；T07、T08 已分别提交 Kaggle；T09、T10 仍未提交。82.15% 是本地验证结果，不是公开榜分数。
 
 FamilySize 是人工设计的输入特征，不是“如果某条件成立就判生还”的人工预测规则。生还判断仍由训练数据学习：逻辑回归学习各编码特征的权重；随机森林学习多棵树的分支条件并汇总投票。两个模型都可能学到错误的关联，应继续用相同验证流程比较。
 
+## 随机森林两次 Kaggle 提交（2026-09-30）
+
+T07 使用四个基础特征 `Pclass`、`Sex`、`Age`、`Fare`；提交编号 `56710547`，状态 `COMPLETE`，公开分数 **0.77751**。2026-09-30T14:45:34 UTC 的公开榜快照显示 **第 3998 名 / 10428 队**。
+
+T08 在相同随机森林参数下增加 `FamilySize = SibSp + Parch + 1`；提交编号 `56710581`，状态 `COMPLETE`，公开分数 **0.77990**。2026-09-30T14:46:36 UTC 的公开榜快照显示 **第 3271 名 / 10428 队**。T08 比 T07 高 0.00239；两份预测对 418 位测试乘客有 9 个不同答案。两次提交均使用 300 棵树、最大深度 5、叶节点至少 5 条训练记录；预测文件及榜单压缩包保存在被 Git 忽略的 `.local/titanic/`。
+
+名次属于抓取时的团队公榜快照，会随滚动榜单变化。详细对照、提交编号及快照时间见 [实验记录表](EXPERIMENTS.md)。
+
 ## 下一步与权限
 
-本机 Kaggle token 能列文件、下载数据并提交。Titanic [规则页](https://www.kaggle.com/c/titanic/rules) 当前注明无需接受规则；第一次提交后，账号的“已参加比赛”列表出现 Titanic。本次提交已由用户明确授权。旧版 Kaggle CLI 1.8.3 中 `competitions submissions` 命令出现 `page_number` 参数兼容错误。项目现固定使用已实测的 2.2.4，可直接运行 `kaggle competitions submissions titanic --format json` 读取提交记录。
+本机 Kaggle token 能列文件、下载数据并提交。Titanic [规则页](https://www.kaggle.com/c/titanic/rules) 当前注明无需接受规则；第一次提交后，账号的“已参加比赛”列表出现 Titanic。本页列出的各次提交均由用户在对应任务中明确授权。旧版 Kaggle CLI 1.8.3 中 `competitions submissions` 命令出现 `page_number` 参数兼容错误。项目现固定使用已实测的 2.2.4，可直接运行 `kaggle competitions submissions titanic --format json` 读取提交记录。
 
 下一轮可比较家庭规模的非线性关系（例如独自旅行与多人同行），并把姓名中的称谓或姓氏作为备选特征。新特征都应放在交叉验证流程内，并使用相同划分比较；不要直接记忆测试集乘客的已知答案。

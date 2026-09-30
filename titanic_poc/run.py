@@ -16,6 +16,7 @@ import pandas as pd
 import sklearn
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold, cross_val_score
@@ -26,6 +27,7 @@ from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardSc
 FEATURES = ["Pclass", "Sex", "Age", "Fare"]
 TARGET = "Survived"
 SEED = 42
+FOREST_PARAMS = {"n_estimators": 300, "max_depth": 5, "min_samples_leaf": 5, "random_state": SEED, "n_jobs": -1}
 
 
 def read_competition_data(zip_path: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -93,6 +95,7 @@ def main() -> None:
     parser.add_argument("--include-cabin", action="store_true", help="Add Cabin deck and an Unknown category")
     parser.add_argument("--include-family", action="store_true", help="Add SibSp and Parch as numeric features")
     parser.add_argument("--include-family-size", action="store_true", help="Add SibSp + Parch + 1 as one numeric feature")
+    parser.add_argument("--model", choices=("logistic_regression", "random_forest"), default="logistic_regression")
     parser.add_argument("--output", type=Path, help="Prediction CSV path; defaults depend on experiment")
     parser.add_argument("--results", type=Path, help="Results JSON path; defaults depend on experiment")
     args = parser.parse_args()
@@ -106,12 +109,14 @@ def main() -> None:
             raise ValueError(f"{name} is required for this experiment")
     x, y = train[features], train[TARGET]
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
+    estimator = RandomForestClassifier(**FOREST_PARAMS) if args.model == "random_forest" else None
+    candidate = make_model(args.include_cabin, args.include_family, args.include_family_size, estimator=estimator)
     scores = {}
-    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), ("logistic_regression", make_model(args.include_cabin, args.include_family, args.include_family_size))):
+    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), (args.model, candidate)):
         values = cross_val_score(model, x, y, scoring="accuracy", cv=cv)
         scores[name] = {"folds": [round(float(v), 6) for v in values], "mean": round(float(values.mean()), 6), "std": round(float(values.std()), 6)}
 
-    model = make_model(args.include_cabin, args.include_family, args.include_family_size).fit(x, y)
+    model = candidate.fit(x, y)
     predictions = model.predict(test[features])
     submission = pd.DataFrame({"PassengerId": test["PassengerId"], TARGET: predictions.astype(int)})
     if submission.columns.tolist() != sample.columns.tolist() or len(submission) != len(sample):
@@ -120,6 +125,8 @@ def main() -> None:
         raise ValueError("Predictions must be 0 or 1")
 
     variant = "_".join(name for name, included in (("cabin", args.include_cabin), ("family", args.include_family), ("family_size", args.include_family_size)) if included) or "poc"
+    if args.model == "random_forest":
+        variant += "_random_forest"
     output = args.output or Path(f".local/titanic/submission_{variant}.csv")
     results_path = args.results or Path(f".local/titanic/{variant}_results.json")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -144,6 +151,8 @@ def main() -> None:
         "source_columns": features,
         "cabin_encoding": "first character; missing=Unknown" if args.include_cabin else None,
         "family_encoding": family_encoding,
+        "algorithm": args.model,
+        "model_params": FOREST_PARAMS if args.model == "random_forest" else {"max_iter": 1000, "random_state": SEED},
         "target": TARGET,
         "metric": "accuracy",
         "validation": {"method": "StratifiedKFold", "folds": 5, "shuffle": True, "random_state": SEED},
