@@ -1,6 +1,19 @@
 # Titanic：第一个本地实验
 
-所有版本的统一对照、Kaggle 公开分数及提交后排名快照见 [实验记录表](EXPERIMENTS.md)。术语同时标注中文与英文；没有提交的版本在表中留空。
+**最新实验入口**：[按算法和尝试次数编号的实验索引](EXPERIMENTS.md)。每个 ID 链接一份独立文档，列出输入特征、超参数、逐折结果、公榜记录和复现命令；旧 T00–T10 编号仍可在索引中查到。本页保留实验过程和学习笔记；需要横向比较时以索引为准。算法选择和调参方法见[机器学习算法地图](../docs/ML_ALGORITHMS.md)。
+
+Titanic 使用 `scikit-learn Pipeline` 组合预处理与模型；逻辑回归（Logistic Regression）和随机森林（Random Forest）共用实验运行器，但末端估计器不同。仓库根目录的 `ml_pipeline/` 是另一套以回归任务为主的组件，**没有被 Titanic 运行器调用**。
+
+推荐按 ID 运行，让每次实验的预测和结果分开保存：
+
+```bash
+.local/venv/bin/python titanic_poc/run.py --list-experiments
+.local/venv/bin/python titanic_poc/run.py --experiment-id TIT-LR-001
+.local/venv/bin/python titanic_poc/run.py --experiment-id TIT-RF-002
+.local/venv/bin/python -m titanic_poc.render_experiments --check
+```
+
+旧版参数命令仍可运行，但默认输出命名不具备稳定实验 ID；下文的旧命令仅用于理解实验演进。
 
 目标：根据乘客资料预测 `Survived`（0 = 未生还，1 = 生还）。Kaggle 使用准确率评分；提交文件需要 `PassengerId,Survived` 两列。比赛介绍与提交说明见 [Kaggle Titanic](https://www.kaggle.com/competitions/titanic/overview/evaluation) 和 [Kaggle CLI 教程](https://github.com/Kaggle/kaggle-cli/blob/main/docs/tutorials.md#tutorial-how-to-submit-to-a-competition)。
 

@@ -1,0 +1,891 @@
+{
+  "schema_version": 1,
+  "competition": "titanic",
+  "data_sha256": "bb1bda464cc6819d412b41d34be69fd89d26b372dc24c09421c3dbca1b0dbe9f",
+  "train_rows": 891,
+  "test_rows": 418,
+  "metric": "accuracy",
+  "validation_single": {
+    "method": "StratifiedKFold",
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42
+  },
+  "validation_repeated_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "team_name": "HaoLiangDATA",
+  "records": {
+    "TIT-BL-001": {
+      "legacy_id": "T00",
+      "algorithm": "majority",
+      "single_cv": {
+        "folds": [
+          0.614525,
+          0.617978,
+          0.617978,
+          0.617978,
+          0.61236
+        ],
+        "mean": 0.616163,
+        "std": 0.002325
+      },
+      "repeated_cv": null,
+      "submission": null,
+      "note": "无乘客特征的参照点，用训练折的多数类别预测；未提交 Kaggle。",
+      "model_params": {
+        "strategy": "most_frequent"
+      },
+      "features": [],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare"
+      ]
+    },
+    "TIT-LR-001": {
+      "legacy_id": "T01",
+      "algorithm": "logistic_regression",
+      "single_cv": {
+        "folds": [
+          0.798883,
+          0.797753,
+          0.780899,
+          0.764045,
+          0.786517
+        ],
+        "mean": 0.785619,
+        "std": 0.012741
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.798883,
+              0.797753,
+              0.780899,
+              0.764045,
+              0.786517
+            ],
+            "mean": 0.785619
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.776536,
+              0.775281,
+              0.814607,
+              0.797753,
+              0.797753
+            ],
+            "mean": 0.792386
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.77095,
+              0.797753,
+              0.803371,
+              0.808989,
+              0.780899
+            ],
+            "mean": 0.792392
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.787709,
+              0.792135,
+              0.758427,
+              0.780899,
+              0.820225
+            ],
+            "mean": 0.787879
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.77095,
+              0.741573,
+              0.820225,
+              0.814607,
+              0.775281
+            ],
+            "mean": 0.784527
+          }
+        ],
+        "mean": 0.788561
+      },
+      "submission": {
+        "submission_id": 56628386,
+        "submitted_at_utc": "2026-09-28T04:06:20.497Z",
+        "public_score": 0.75837,
+        "rank_snapshot": {
+          "captured_at_utc": "2026-09-28T12:59:17Z",
+          "rank": 9028,
+          "teams": 10267
+        },
+        "submission_sha256": "2f4002ed193581244713c4089f5fffa999fa0dd0230a2c8b3d05516392df5b17"
+      },
+      "note": "第一版四特征模型；已经提交，公开分数低于本地交叉验证。",
+      "model_params": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare"
+      ]
+    },
+    "TIT-LR-002": {
+      "legacy_id": "T02",
+      "algorithm": "logistic_regression",
+      "single_cv": {
+        "folds": [
+          0.810056,
+          0.831461,
+          0.752809,
+          0.752809,
+          0.837079
+        ],
+        "mean": 0.796843,
+        "std": 0.037067
+      },
+      "repeated_cv": null,
+      "submission": null,
+      "note": "仅加入 Cabin 甲板，本地单次五折高于第一版；Cabin 大量缺失。",
+      "model_params": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin"
+      ]
+    },
+    "TIT-LR-003": {
+      "legacy_id": "T03",
+      "algorithm": "logistic_regression",
+      "single_cv": {
+        "folds": [
+          0.793296,
+          0.797753,
+          0.786517,
+          0.769663,
+          0.803371
+        ],
+        "mean": 0.79012,
+        "std": 0.011622
+      },
+      "repeated_cv": null,
+      "submission": null,
+      "note": "将 SibSp 与 Parch 分开输入；本地五折仅小幅高于第一版。",
+      "model_params": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "SibSp",
+        "Parch"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "SibSp",
+        "Parch"
+      ]
+    },
+    "TIT-LR-004": {
+      "legacy_id": "T04",
+      "algorithm": "logistic_regression",
+      "single_cv": {
+        "folds": [
+          0.798883,
+          0.808989,
+          0.769663,
+          0.769663,
+          0.842697
+        ],
+        "mean": 0.797979,
+        "std": 0.027296
+      },
+      "repeated_cv": null,
+      "submission": null,
+      "note": "四特征加 Cabin 甲板和两项家庭计数；本地五折为该组逻辑回归配置中最高，但未提交。",
+      "model_params": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "SibSp",
+        "Parch"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "SibSp",
+        "Parch"
+      ]
+    },
+    "TIT-LR-005": {
+      "legacy_id": "T05",
+      "algorithm": "logistic_regression",
+      "single_cv": {
+        "folds": [
+          0.810056,
+          0.780899,
+          0.792135,
+          0.780899,
+          0.797753
+        ],
+        "mean": 0.792348,
+        "std": 0.011
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.810056,
+              0.780899,
+              0.792135,
+              0.780899,
+              0.797753
+            ],
+            "mean": 0.792348
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.793296,
+              0.775281,
+              0.792135,
+              0.820225,
+              0.792135
+            ],
+            "mean": 0.794614
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.793296,
+              0.797753,
+              0.797753,
+              0.825843,
+              0.764045
+            ],
+            "mean": 0.795738
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.804469,
+              0.803371,
+              0.735955,
+              0.803371,
+              0.825843
+            ],
+            "mean": 0.794602
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.776536,
+              0.752809,
+              0.820225,
+              0.825843,
+              0.780899
+            ],
+            "mean": 0.791262
+          }
+        ],
+        "mean": 0.793713
+      },
+      "submission": null,
+      "note": "将两项家庭计数合为 FamilySize，未加入 Cabin；未提交。",
+      "model_params": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "FamilySize"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "SibSp",
+        "Parch"
+      ]
+    },
+    "TIT-LR-006": {
+      "legacy_id": "T06",
+      "algorithm": "logistic_regression",
+      "single_cv": {
+        "folds": [
+          0.810056,
+          0.808989,
+          0.764045,
+          0.769663,
+          0.831461
+        ],
+        "mean": 0.796843,
+        "std": 0.025826
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.810056,
+              0.808989,
+              0.764045,
+              0.769663,
+              0.831461
+            ],
+            "mean": 0.796843
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.793296,
+              0.775281,
+              0.786517,
+              0.831461,
+              0.792135
+            ],
+            "mean": 0.795738
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.798883,
+              0.814607,
+              0.792135,
+              0.808989,
+              0.769663
+            ],
+            "mean": 0.796855
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.804469,
+              0.808989,
+              0.730337,
+              0.825843,
+              0.825843
+            ],
+            "mean": 0.799096
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.798883,
+              0.786517,
+              0.814607,
+              0.837079,
+              0.786517
+            ],
+            "mean": 0.80472
+          }
+        ],
+        "mean": 0.79865
+      },
+      "submission": {
+        "submission_id": 56652901,
+        "submitted_at_utc": "2026-09-28T21:43:11.720Z",
+        "public_score": 0.76076,
+        "rank_snapshot": {
+          "captured_at_utc": "2026-09-28T21:43:26Z",
+          "rank": 8866,
+          "teams": 10248
+        },
+        "submission_sha256": "b1a56c9145c2143fcb0e4cd922bd614f0d33ccdf71b82ed899ea6ff58cb80b70"
+      },
+      "note": "FamilySize 与 Cabin 甲板一起输入；公开分数较第一版略高，不能单凭一次提交断定特征稳定有效。",
+      "model_params": {
+        "max_iter": 1000,
+        "random_state": 42
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "FamilySize"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "SibSp",
+        "Parch"
+      ]
+    },
+    "TIT-RF-001": {
+      "legacy_id": "T07",
+      "algorithm": "random_forest",
+      "single_cv": {
+        "folds": [
+          0.849162,
+          0.831461,
+          0.792135,
+          0.814607,
+          0.837079
+        ],
+        "mean": 0.824889,
+        "std": 0.019797
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.849162,
+              0.831461,
+              0.792135,
+              0.814607,
+              0.837079
+            ],
+            "mean": 0.824889
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.804469,
+              0.808989,
+              0.820225,
+              0.831461,
+              0.814607
+            ],
+            "mean": 0.81595
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.843575,
+              0.831461,
+              0.831461,
+              0.831461,
+              0.780899
+            ],
+            "mean": 0.823771
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.843575,
+              0.792135,
+              0.764045,
+              0.837079,
+              0.820225
+            ],
+            "mean": 0.811412
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.815642,
+              0.786517,
+              0.853933,
+              0.842697,
+              0.803371
+            ],
+            "mean": 0.820432
+          }
+        ],
+        "mean": 0.819291
+      },
+      "submission": {
+        "submission_id": 56710547,
+        "submitted_at_utc": "2026-09-30T14:45:03.503Z",
+        "public_score": 0.77751,
+        "rank_snapshot": {
+          "captured_at_utc": "2026-09-30T14:45:34Z",
+          "rank": 3998,
+          "teams": 10428
+        },
+        "submission_sha256": "82919c61fb81fa85c4798d5b19c929eec19b705fa7236dbfcf2c5e31b8730f39"
+      },
+      "note": "不增加额外特征，只将四特征模型换成限制深度的随机森林；本地和公榜均高于逻辑回归第一版。",
+      "model_params": {
+        "n_estimators": 300,
+        "max_depth": 5,
+        "min_samples_leaf": 5,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare"
+      ]
+    },
+    "TIT-RF-002": {
+      "legacy_id": "T08",
+      "algorithm": "random_forest",
+      "single_cv": {
+        "folds": [
+          0.837989,
+          0.820225,
+          0.808989,
+          0.814607,
+          0.853933
+        ],
+        "mean": 0.827148,
+        "std": 0.016552
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.837989,
+              0.820225,
+              0.808989,
+              0.814607,
+              0.853933
+            ],
+            "mean": 0.827148
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.821229,
+              0.820225,
+              0.814607,
+              0.837079,
+              0.825843
+            ],
+            "mean": 0.823796
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.843575,
+              0.820225,
+              0.825843,
+              0.820225,
+              0.792135
+            ],
+            "mean": 0.8204
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.849162,
+              0.808989,
+              0.780899,
+              0.831461,
+              0.820225
+            ],
+            "mean": 0.818147
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.821229,
+              0.775281,
+              0.853933,
+              0.837079,
+              0.803371
+            ],
+            "mean": 0.818178
+          }
+        ],
+        "mean": 0.821534
+      },
+      "submission": {
+        "submission_id": 56710581,
+        "submitted_at_utc": "2026-09-30T14:46:09.843Z",
+        "public_score": 0.7799,
+        "rank_snapshot": {
+          "captured_at_utc": "2026-09-30T14:46:36Z",
+          "rank": 3271,
+          "teams": 10428
+        },
+        "submission_sha256": "52232f5ccb88bec09e0f2a0b1d1591a32d8715a2dccd8db1aab80fabb85a38ad"
+      },
+      "note": "在同样森林参数下增加 FamilySize；公开分数比 TIT-RF-001 高 0.00239，但两版只有 9 个测试预测不同。",
+      "model_params": {
+        "n_estimators": 300,
+        "max_depth": 5,
+        "min_samples_leaf": 5,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "FamilySize"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "SibSp",
+        "Parch"
+      ]
+    },
+    "TIT-RF-003": {
+      "legacy_id": "T09",
+      "algorithm": "random_forest",
+      "single_cv": {
+        "folds": [
+          0.815642,
+          0.803371,
+          0.814607,
+          0.814607,
+          0.859551
+        ],
+        "mean": 0.821555,
+        "std": 0.019524
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.815642,
+              0.803371,
+              0.814607,
+              0.814607,
+              0.859551
+            ],
+            "mean": 0.821555
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.804469,
+              0.808989,
+              0.825843,
+              0.820225,
+              0.820225
+            ],
+            "mean": 0.81595
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.821229,
+              0.814607,
+              0.814607,
+              0.831461,
+              0.797753
+            ],
+            "mean": 0.815931
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.821229,
+              0.808989,
+              0.775281,
+              0.814607,
+              0.837079
+            ],
+            "mean": 0.811437
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.810056,
+              0.775281,
+              0.848315,
+              0.837079,
+              0.808989
+            ],
+            "mean": 0.815944
+          }
+        ],
+        "mean": 0.816163
+      },
+      "submission": null,
+      "note": "森林加入 Cabin 甲板和 FamilySize；重复交叉验证低于不加入 Cabin 的 TIT-RF-002，未提交。",
+      "model_params": {
+        "n_estimators": 300,
+        "max_depth": 5,
+        "min_samples_leaf": 5,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "FamilySize"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "SibSp",
+        "Parch"
+      ]
+    },
+    "TIT-RF-004": {
+      "legacy_id": "T10",
+      "algorithm": "random_forest",
+      "single_cv": {
+        "folds": [
+          0.810056,
+          0.803371,
+          0.808989,
+          0.803371,
+          0.848315
+        ],
+        "mean": 0.81482,
+        "std": 0.016975
+      },
+      "repeated_cv": {
+        "seeds": [
+          {
+            "seed": 42,
+            "folds": [
+              0.810056,
+              0.803371,
+              0.808989,
+              0.803371,
+              0.848315
+            ],
+            "mean": 0.81482
+          },
+          {
+            "seed": 43,
+            "folds": [
+              0.798883,
+              0.820225,
+              0.848315,
+              0.820225,
+              0.825843
+            ],
+            "mean": 0.822698
+          },
+          {
+            "seed": 44,
+            "folds": [
+              0.798883,
+              0.820225,
+              0.820225,
+              0.837079,
+              0.808989
+            ],
+            "mean": 0.81708
+          },
+          {
+            "seed": 45,
+            "folds": [
+              0.837989,
+              0.814607,
+              0.764045,
+              0.831461,
+              0.808989
+            ],
+            "mean": 0.811418
+          },
+          {
+            "seed": 46,
+            "folds": [
+              0.826816,
+              0.780899,
+              0.842697,
+              0.831461,
+              0.797753
+            ],
+            "mean": 0.815925
+          }
+        ],
+        "mean": 0.816388
+      },
+      "submission": null,
+      "note": "森林加入 Cabin 甲板并保留 SibSp、Parch 两列；重复交叉验证与 TIT-RF-003 接近，未提交。",
+      "model_params": {
+        "n_estimators": 300,
+        "max_depth": 5,
+        "min_samples_leaf": 5,
+        "random_state": 42,
+        "n_jobs": -1
+      },
+      "features": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "SibSp",
+        "Parch"
+      ],
+      "source_columns": [
+        "Pclass",
+        "Sex",
+        "Age",
+        "Fare",
+        "Cabin",
+        "SibSp",
+        "Parch"
+      ]
+    }
+  }
+}

@@ -2,9 +2,11 @@
 
 This repository contains code and pipelines for Kaggle competitions.
 
+当前可复现的 Titanic 分类实验使用 `titanic_poc/run.py` 中的 **scikit-learn Pipeline**，并未调用根目录的 `ml_pipeline/` 回归包。各版本、参数、提交与排名见 [Titanic 实验索引](titanic_poc/EXPERIMENTS.md)；算法适用范围、调参入口与 Pipeline 状态见 [ML 算法目录](docs/ML_ALGORITHMS.md)。
+
 ## ML Analysis Pipeline (High Level)
 
-This pipeline is designed to be **clean, reusable, and extensible** - suitable for production-grade ML workflows. The architecture clearly separates automated pipeline steps from human decision points.
+The following is the repository's original regression-oriented design sketch. It is not a description of the current Titanic classification implementation. `ml_pipeline/` exists, but its current evaluator is regression-specific and the `kaggle_s6_e1` training script fits preprocessing before cross-validation; validate or revise that path before relying on its CV scores.
 
 ---
 
@@ -116,7 +118,7 @@ Raw Data (CSV/Parquet)
 
 #### 🤖 Model Training
 
-**Current Approach:**
+**Original regression design:**
 1. Start with **Linear Regression** (baseline)
    - Validates feature engineering and pipeline correctness
    - Simple, interpretable, fast
@@ -140,7 +142,7 @@ This interface allows **swapping models without changing the pipeline**.
 
 #### 🤖 Model Evaluation
 
-**Metrics:**
+**Regression metrics in `ml_pipeline/` (Titanic instead uses accuracy):**
 - RMSE (Root Mean Squared Error)
 - MAE (Mean Absolute Error)
 - R² Score
@@ -207,9 +209,9 @@ Each competition folder contains:
 1. **Start simple**: Linear Regression baseline
 2. **Validate pipeline**: Ensure end-to-end flow works
 3. **Iterate**: Upgrade to complex models (GBDT)
-4. **Production-ready**: Modular, testable, deployable
+4. **Before deployment**: Add task-specific evaluation, leakage checks and reproducible tests
 
-This approach is **professional and production-oriented**, not just Kaggle optimization.
+These are design goals. The current `ml_pipeline/` path has not met the same verification standard as the Titanic experiments.
 
 ## Kaggle 比赛发现实验
 

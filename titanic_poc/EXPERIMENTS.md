@@ -1,41 +1,38 @@
 # Titanic 实验记录（Experiment Log）
 
-预测目标（target）：`Survived`。评分指标（metric）统一为准确率（accuracy），即预测正确的人数占比。表中“本地”来自训练集的交叉验证（cross-validation, CV）；“Kaggle 公榜”来自提交后的测试集公开分数（public score）。两者不是同一批评估数据。
+每一行对应一份独立实验文档。ID 格式是 `TIT-算法缩写-尝试序号`，例如 `TIT-RF-002` 表示 Titanic 的随机森林第 2 次尝试；旧的 T00–T10 编号保留用于追溯先前讨论。点击 ID 可查看参数、逐折结果、Kaggle 提交及复现命令。
 
-**基础特征 B**：`Pclass`（舱位等级）、`Sex`（性别）、`Age`（年龄）、`Fare`（票价）。下表除多数类基线外，**每一行都包含 B**；“额外特征”仅列另外添加的字段。
+**基础特征 B**：`Pclass`（舱位等级）、`Sex`（性别）、`Age`（年龄）、`Fare`（票价）。除多数类基线外，每行都包含 B。评分指标（metric）统一为准确率（accuracy）。本地交叉验证（cross-validation）与 Kaggle 公开榜（public leaderboard）使用不同数据，不要把两个分数当作同一测试结果。
 
-| ID | 方法（Method） | 额外特征（Features） | 本地 5 折准确率 | 本地重复 5×5 折准确率 | Kaggle 公榜分数 | 提交后排名快照 |
-| --- | --- | --- | ---: | ---: | ---: | --- |
-| T00 | 多数类基线（Majority baseline） | 无，也不使用 B | 61.62% | — | — | — |
-| T01 | 逻辑回归（Logistic Regression） | 无 | 78.56% | 78.86% | **0.75837** · #56628386 | **9028 / 10267**¹ |
-| T02 | 逻辑回归（Logistic Regression） | Cabin 甲板（Deck） | 79.68% | — | — | — |
-| T03 | 逻辑回归（Logistic Regression） | `SibSp`、`Parch` 分开输入 | 79.01% | — | — | — |
-| T04 | 逻辑回归（Logistic Regression） | Cabin 甲板、`SibSp`、`Parch` 分开输入 | 79.80% | — | — | — |
-| T05 | 逻辑回归（Logistic Regression） | FamilySize | 79.23% | 79.37% | — | — |
-| T06 | 逻辑回归（Logistic Regression） | Cabin 甲板、FamilySize | 79.68% | 79.87% | **0.76076** · #56652901 | **8866 / 10248**² |
-| T07 | 随机森林（Random Forest） | 无 | 82.49% | 81.93% | **0.77751** · #56710547 | **3998 / 10428**³ |
-| T08 | 随机森林（Random Forest） | FamilySize | **82.71%** | **82.15%** | **0.77990** · #56710581 | **3271 / 10428**⁴ |
-| T09 | 随机森林（Random Forest） | Cabin 甲板、FamilySize | 82.16% | 81.62% | — | — |
-| T10 | 随机森林（Random Forest） | Cabin 甲板、`SibSp`、`Parch` 分开输入 | 81.48% | 81.64% | — | — |
+| 实验 ID / 文档 | 旧 ID | 名称 | 算法与尝试 | 额外特征 | 本地 5 折 | 本地重复 5×5 折 | Kaggle 公榜 | 排名快照 |
+| --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+| [TIT-BL-001](experiments/TIT-BL-001.md) | T00 | 永远预测训练折的多数类 | 多数类基线（Majority Baseline） · 第 1 次 | 无 | 61.62% | — | — | — |
+| [TIT-LR-001](experiments/TIT-LR-001.md) | T01 | 四项基础特征 | 逻辑回归（Logistic Regression） · 第 1 次 | 无 | 78.56% | 78.86% | 0.75837 · #56628386 | 9028 / 10267 |
+| [TIT-LR-002](experiments/TIT-LR-002.md) | T02 | 四项基础特征 + Cabin 甲板 | 逻辑回归（Logistic Regression） · 第 2 次 | Cabin 甲板 | 79.68% | — | — | — |
+| [TIT-LR-003](experiments/TIT-LR-003.md) | T03 | 四项基础特征 + SibSp/Parch | 逻辑回归（Logistic Regression） · 第 3 次 | SibSp + Parch（分开） | 79.01% | — | — | — |
+| [TIT-LR-004](experiments/TIT-LR-004.md) | T04 | 四项基础特征 + Cabin + SibSp/Parch | 逻辑回归（Logistic Regression） · 第 4 次 | Cabin 甲板、SibSp + Parch（分开） | 79.80% | — | — | — |
+| [TIT-LR-005](experiments/TIT-LR-005.md) | T05 | 四项基础特征 + FamilySize | 逻辑回归（Logistic Regression） · 第 5 次 | FamilySize | 79.23% | 79.37% | — | — |
+| [TIT-LR-006](experiments/TIT-LR-006.md) | T06 | 四项基础特征 + Cabin + FamilySize | 逻辑回归（Logistic Regression） · 第 6 次 | Cabin 甲板、FamilySize | 79.68% | 79.87% | 0.76076 · #56652901 | 8866 / 10248 |
+| [TIT-RF-001](experiments/TIT-RF-001.md) | T07 | 四项基础特征 | 随机森林（Random Forest） · 第 1 次 | 无 | 82.49% | 81.93% | 0.77751 · #56710547 | 3998 / 10428 |
+| [TIT-RF-002](experiments/TIT-RF-002.md) | T08 | 四项基础特征 + FamilySize | 随机森林（Random Forest） · 第 2 次 | FamilySize | 82.71% | 82.15% | 0.77990 · #56710581 | 3271 / 10428 |
+| [TIT-RF-003](experiments/TIT-RF-003.md) | T09 | 四项基础特征 + Cabin + FamilySize | 随机森林（Random Forest） · 第 3 次 | Cabin 甲板、FamilySize | 82.16% | 81.62% | — | — |
+| [TIT-RF-004](experiments/TIT-RF-004.md) | T10 | 四项基础特征 + Cabin + SibSp/Parch | 随机森林（Random Forest） · 第 4 次 | Cabin 甲板、SibSp + Parch（分开） | 81.48% | 81.64% | — | — |
 
-¹ 2026-09-28 **12:59:17 UTC** 榜单快照，首版提交时间是 04:06:20 UTC；这是同日稍后记录的名次，不是提交瞬间的名次。
+## 如何比较
 
-² 2026-09-28 **21:43:26 UTC** 榜单快照，FamilySize 版本提交时间是 21:43:11 UTC。
+- `—` 表示尚未做该项验证或尚未提交，绝不表示得分为零。只有实际提交并确认完成的版本才填写 Kaggle 分数。
+- 单次本地结果：随机种子 42 的分层五折（Stratified 5-fold CV）。重复结果：种子 42–46 各做一次五折，再平均五个均分。优先在同一列比较模型；重复划分共享训练样本，不是五份独立测试集。
+- 排名是团队在提交后抓取的榜单快照，不是永久名次。每个已提交版本的文档都写明提交时间、快照时间及当时队伍总数；旧版 T01 的快照在提交数小时后抓取。
+- FamilySize = SibSp + Parch + 1；Cabin 仅取首字母作为甲板，缺失时记为 `Unknown`。这些是输入特征（features），准确率才是评分指标（metric）。
+- 官方数据压缩包 SHA256：`bb1bda464cc6819d412b41d34be69fd89d26b372dc24c09421c3dbca1b0dbe9f`。原始比赛数据、预测 CSV 和本机状态保存在被 Git 忽略的 `.local/titanic/`；本仓库只追踪配置、聚合结果和提交元数据。
 
-³ 2026-09-30 **14:45:34 UTC** 榜单快照，T07 提交时间是 14:45:03 UTC。
+## 实验工作流
 
-⁴ 2026-09-30 **14:46:36 UTC** 榜单快照，T08 提交时间是 14:46:09 UTC。Kaggle 是滚动榜单，人数和名次会变。
+```text
+官方数据 → 固定实验 ID → 特征与预处理 Pipeline → 算法 → 分层交叉验证
+         → 本地结果 → 全量训练与预测文件 → 经授权提交 → 公榜快照
+```
 
-## 如何读这张表
+运行 `.local/venv/bin/python titanic_poc/run.py --list-experiments` 查看全部 ID；使用 `--experiment-id TIT-RF-002` 复现某一版。每个 ID 的输出单独写入 `.local/titanic/experiments/<ID>/`；内容相同的重跑会复用文件，内容不同时会报错，避免覆盖历史结果。重复交叉验证使用 `.local/venv/bin/python -m titanic_poc.compare_models`。
 
-- `—` 表示**尚未验证或尚未提交**，绝不表示得分为 0。目前 T01、T06、T07、T08 有 Kaggle 公开分数；T09、T10 仍只有本地结果。
-- 单次本地结果是分层五折（Stratified 5-fold CV），打乱后固定随机种子 42。重复结果用种子 42–46 各做一次五折，并取五个均分的平均。比较模型时优先在**同一列**比较；重复折之间共享样本，不能当作独立测试集。
-- `FamilySize = SibSp + Parch + 1`（同行家庭规模）。Cabin 只提取首字母作为甲板，缺失值单独记作 `Unknown`。这些是输入特征（features），不是评分指标（metrics）。
-- 逻辑回归用每折训练数据填充数值缺失、缩放数值并做类别独热编码（one-hot encoding）。随机森林沿用同一预处理以保证对照可比，固定 300 棵树、最大深度 5、叶节点至少 5 条训练记录。两种方法都没有写入“某类乘客必定生还”的人工预测规则。
-- 所有行使用同一份官方 `titanic.zip`，SHA256 为 `bb1bda464cc6819d412b41d34be69fd89d26b372dc24c09421c3dbca1b0dbe9f`；本地 Python 环境为 scikit-learn 1.9.1。预处理在每折训练流程中拟合。多个方案复用同一训练数据来挑选较高分时会有选择偏差；本地 82.15% **不能**当作 Kaggle 公榜成绩或保证未来提交会提高。
-
-## 复现与更新
-
-原始五折实验：运行 `python titanic_poc/run.py`，按需要加 `--include-cabin`、`--include-family` 或 `--include-family-size`。T07 的预测文件用 `.local/venv/bin/python titanic_poc/run.py --model random_forest` 生成；T08 再加 `--include-family-size`。随机森林本地对照：运行 `.local/venv/bin/python -m titanic_poc.compare_models`。逐折结果保存在 Git 忽略的 `.local/titanic/*_results.json` 和 `.local/titanic/model_comparison.json`；原始数据及预测文件也留在 `.local/titanic/`，不加入 Git。
-
-以后每做一个版本，先新增一行并记录方法、全部基础特征之外的输入、验证方案及本地分数。只有实际提交并确认 `COMPLETE` 后才填 Kaggle 分数；排名必须带抓取时间和当时队伍总数。若更换数据版本或评分指标，应另起一组记录，避免把不能直接比较的数字放在一起。
+实验配置在 `experiment_registry.py`，可审查的历史结果在 `experiment_records.json`。更新记录后运行 `.local/venv/bin/python -m titanic_poc.render_experiments` 重新生成本索引与各实验文档；`--check` 仅检查文件是否同步。新算法或新特征应使用新 ID，保留旧记录。

@@ -23,6 +23,11 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 
+if __package__:
+    from .experiment_registry import EXPERIMENTS
+else:
+    from experiment_registry import EXPERIMENTS
+
 
 FEATURES = ["Pclass", "Sex", "Age", "Fare"]
 TARGET = "Survived"
@@ -95,10 +100,24 @@ def main() -> None:
     parser.add_argument("--include-cabin", action="store_true", help="Add Cabin deck and an Unknown category")
     parser.add_argument("--include-family", action="store_true", help="Add SibSp and Parch as numeric features")
     parser.add_argument("--include-family-size", action="store_true", help="Add SibSp + Parch + 1 as one numeric feature")
-    parser.add_argument("--model", choices=("logistic_regression", "random_forest"), default="logistic_regression")
+    parser.add_argument("--model", choices=("majority", "logistic_regression", "random_forest"), default="logistic_regression")
+    parser.add_argument("--experiment-id", choices=tuple(EXPERIMENTS), help="Use a registered configuration and ID-specific local output directory")
+    parser.add_argument("--list-experiments", action="store_true", help="List stable experiment IDs and exit")
     parser.add_argument("--output", type=Path, help="Prediction CSV path; defaults depend on experiment")
     parser.add_argument("--results", type=Path, help="Results JSON path; defaults depend on experiment")
     args = parser.parse_args()
+    if args.list_experiments:
+        for registered in EXPERIMENTS.values():
+            print(f"{registered.experiment_id}  {registered.algorithm}  {registered.name}")
+        return
+    spec = EXPERIMENTS.get(args.experiment_id)
+    if spec:
+        if args.include_cabin or args.include_family or args.include_family_size or args.model != "logistic_regression":
+            parser.error("--experiment-id supplies the model and feature flags; do not combine them")
+        args.include_cabin = spec.include_cabin
+        args.include_family = spec.include_family
+        args.include_family_size = spec.include_family_size
+        args.model = spec.algorithm
     if args.include_family and args.include_family_size:
         parser.error("Choose either --include-family or --include-family-size")
 
@@ -110,9 +129,10 @@ def main() -> None:
     x, y = train[features], train[TARGET]
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
     estimator = RandomForestClassifier(**FOREST_PARAMS) if args.model == "random_forest" else None
-    candidate = make_model(args.include_cabin, args.include_family, args.include_family_size, estimator=estimator)
+    candidate = DummyClassifier(strategy="most_frequent") if args.model == "majority" else make_model(args.include_cabin, args.include_family, args.include_family_size, estimator=estimator)
+    score_models = (("majority", candidate),) if args.model == "majority" else (("majority", DummyClassifier(strategy="most_frequent")), (args.model, candidate))
     scores = {}
-    for name, model in (("majority", DummyClassifier(strategy="most_frequent")), (args.model, candidate)):
+    for name, model in score_models:
         values = cross_val_score(model, x, y, scoring="accuracy", cv=cv)
         scores[name] = {"folds": [round(float(v), 6) for v in values], "mean": round(float(values.mean()), 6), "std": round(float(values.std()), 6)}
 
@@ -125,24 +145,27 @@ def main() -> None:
         raise ValueError("Predictions must be 0 or 1")
 
     variant = "_".join(name for name, included in (("cabin", args.include_cabin), ("family", args.include_family), ("family_size", args.include_family_size)) if included) or "poc"
-    if args.model == "random_forest":
-        variant += "_random_forest"
-    output = args.output or Path(f".local/titanic/submission_{variant}.csv")
-    results_path = args.results or Path(f".local/titanic/{variant}_results.json")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    results_path.parent.mkdir(parents=True, exist_ok=True)
-    submission.to_csv(output, index=False)
+    if args.model != "logistic_regression":
+        variant += f"_{args.model}"
+    output = args.output or (Path(f".local/titanic/experiments/{spec.experiment_id}/submission.csv") if spec else Path(f".local/titanic/submission_{variant}.csv"))
+    results_path = args.results or (Path(f".local/titanic/experiments/{spec.experiment_id}/results.json") if spec else Path(f".local/titanic/{variant}_results.json"))
     model_features = FEATURES + (["Cabin"] if args.include_cabin else [])
     if args.include_family:
         model_features += ["SibSp", "Parch"]
     if args.include_family_size:
         model_features += ["FamilySize"]
+    if args.model == "majority":
+        model_features = []
     family_encoding = None
     if args.include_family:
         family_encoding = "SibSp and Parch as scaled numbers"
     elif args.include_family_size:
         family_encoding = "FamilySize = SibSp + Parch + 1, scaled"
     results = {
+        "experiment_id": spec.experiment_id if spec else None,
+        "experiment_name": spec.name if spec else None,
+        "algorithm_attempt": spec.attempt if spec else None,
+        "experiment_document": spec.document if spec else None,
         "competition": "titanic",
         "data_sha256": hashlib.sha256(args.zip.read_bytes()).hexdigest(),
         "train_rows": len(train),
@@ -152,7 +175,7 @@ def main() -> None:
         "cabin_encoding": "first character; missing=Unknown" if args.include_cabin else None,
         "family_encoding": family_encoding,
         "algorithm": args.model,
-        "model_params": FOREST_PARAMS if args.model == "random_forest" else {"max_iter": 1000, "random_state": SEED},
+        "model_params": FOREST_PARAMS if args.model == "random_forest" else {"strategy": "most_frequent"} if args.model == "majority" else {"max_iter": 1000, "random_state": SEED},
         "target": TARGET,
         "metric": "accuracy",
         "validation": {"method": "StratifiedKFold", "folds": 5, "shuffle": True, "random_state": SEED},
@@ -160,7 +183,17 @@ def main() -> None:
         "submission_rows": len(submission),
         "versions": {"pandas": pd.__version__, "scikit_learn": sklearn.__version__},
     }
-    results_path.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n")
+    if output.resolve() == results_path.resolve():
+        raise ValueError("Prediction and results paths must be different")
+    csv_content = submission.to_csv(index=False)
+    results_content = json.dumps(results, ensure_ascii=False, indent=2) + "\n"
+    for path, content in ((output, csv_content), (results_path, results_content)):
+        if path.exists() and path.read_text() != content:
+            raise FileExistsError(f"Existing experiment artifact differs; choose a new path or experiment ID: {path}")
+    for path, content in ((output, csv_content), (results_path, results_content)):
+        if not path.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
     print(json.dumps(results, ensure_ascii=False, indent=2))
 
 
