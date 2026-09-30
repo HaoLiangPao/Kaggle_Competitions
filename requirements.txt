@@ -3,3 +3,4 @@ numpy>=1.23.0
 scikit-learn>=1.2.0
 pyyaml>=6.0
 joblib>=1.2.0
+kaggle==2.2.4

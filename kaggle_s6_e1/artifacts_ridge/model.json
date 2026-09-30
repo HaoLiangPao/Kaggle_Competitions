@@ -1,0 +1,10 @@
+{
+  "model_type": "ridge",
+  "model_params": {
+    "alpha": 1.0
+  },
+  "created_at": "2026-01-26T16:41:22.716008",
+  "fitted_at": "2026-01-26T16:41:23.243754",
+  "n_features": 30,
+  "n_samples": 630000
+}
