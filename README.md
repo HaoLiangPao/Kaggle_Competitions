@@ -213,7 +213,7 @@ This approach is **professional and production-oriented**, not just Kaggle optim
 
 ## Kaggle 比赛发现实验
 
-第一个真实数据 POC：见 [Titanic 本地实验](titanic_poc/README.md)，包含可复现的下载、交叉验证、简单数据分析和提交文件格式检查。
+第一个真实数据 POC：见 [Titanic 实验记录表](titanic_poc/EXPERIMENTS.md)和 [Titanic 本地实验说明](titanic_poc/README.md)，包含模型、输入特征、本地验证、Kaggle 公开分数与历史排名快照。
 
 第一版只读取 Kaggle 比赛列表，不下载数据、不加入比赛、不提交结果。它会过滤已截止比赛，并用本地 SQLite 文件记录已经见过的比赛。首次 scan 只建立基线；以后出现的新比赛才会处于待通知状态。
 

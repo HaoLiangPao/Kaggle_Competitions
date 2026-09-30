@@ -1,5 +1,7 @@
 # Titanic：第一个本地实验
 
+所有版本的统一对照、Kaggle 公开分数及提交后排名快照见 [实验记录表](EXPERIMENTS.md)。术语同时标注中文与英文；没有提交的版本在表中留空。
+
 目标：根据乘客资料预测 `Survived`（0 = 未生还，1 = 生还）。Kaggle 使用准确率评分；提交文件需要 `PassengerId,Survived` 两列。比赛介绍与提交说明见 [Kaggle Titanic](https://www.kaggle.com/competitions/titanic/overview/evaluation) 和 [Kaggle CLI 教程](https://github.com/Kaggle/kaggle-cli/blob/main/docs/tutorials.md#tutorial-how-to-submit-to-a-competition)。
 
 ## 已完成的实验

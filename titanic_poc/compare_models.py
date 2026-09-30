@@ -17,6 +17,8 @@ from titanic_poc.run import FEATURES, SEED, TARGET, make_model, read_competition
 FOREST_PARAMS = {"n_estimators": 300, "max_depth": 5, "min_samples_leaf": 5, "random_state": SEED, "n_jobs": -1}
 SEEDS = [42, 43, 44, 45, 46]
 CASES = [
+    ("logistic_basic", "logistic_regression", False, False, False),
+    ("logistic_family_size", "logistic_regression", False, False, True),
     ("logistic_cabin_family_size", "logistic_regression", True, False, True),
     ("forest_basic", "random_forest", False, False, False),
     ("forest_family_size", "random_forest", False, False, True),
